@@ -1,7 +1,6 @@
 name: wallpaper_app
-description: A 4K & HD wallpaper app with favorites, categories, and downloads.
-publish_to: "none"
-
+description: A 4K & HD Wallpaper app with Pexels API, Ads, and Hive favorites.
+publish_to: 'none'
 version: 1.0.0+1
 
 environment:
@@ -11,38 +10,31 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # HTTP requests
+  # Networking
   http: ^1.1.0
+  connectivity_plus: ^4.0.2
+  url_launcher: ^6.1.10
 
-  # Image caching
-  cached_network_image: ^3.2.3
+  # UI & Images
+  cached_network_image: ^3.4.1
+  flutter_staggered_grid_view: ^0.6.2
+  gallery_saver: ^2.3.2
+  wallpaper_manager_flutter: ^1.0.3
+  permission_handler: ^11.4.0
 
-  # Ads
-  google_mobile_ads: ^3.2.0
-
-  # Local storage
-  shared_preferences: ^2.2.0
-  hive: ^2.2.3
+  # Local Storage
+  shared_preferences: ^2.3.0
+  hive: ^2.3.2
   hive_flutter: ^1.1.0
 
-  # File system & directories
-  path_provider: ^2.1.11
-
-  # Connectivity
-  connectivity_plus: ^4.0.3
-
-  # Wallpaper & gallery
-  wallpaper_manager_flutter: ^1.0.3
-  gallery_saver: ^2.3.2
-  permission_handler: ^11.3.1
-
-  # URL launcher
-  url_launcher: ^6.1.10
+  # Ads
+  google_mobile_ads: ^5.3.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^2.0.0
+  hive_generator: ^2.0.0
+  build_runner: ^2.4.0
 
 flutter:
   uses-material-design: true
