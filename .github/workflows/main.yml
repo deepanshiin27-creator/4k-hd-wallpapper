@@ -1,4 +1,4 @@
-name: Flutter Android Build (Auto Android + Internet + Logo + APK + AAB)
+name: Flutter Android Build
 
 on:
   push:
@@ -11,73 +11,64 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout repository
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # 2️⃣ Setup Flutter (latest stable 2025)
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.4' # Latest stable as of 2025
+          flutter-version: '3.35.7'
 
-      # 3️⃣ Clean cache & get dependencies
       - name: Flutter Pub Get
-        run: |
-          flutter clean
-          flutter pub get
+        run: flutter pub get
 
-      # 4️⃣ Remove existing Android folder (for clean v2 embedding)
-      - name: Remove Old Android Folder
+      - name: Remove Old Android Folder (if exists)
         run: |
           if [ -d "android" ]; then
             rm -rf android
-            echo "🗑️ Old Android folder removed."
+            echo "Old Android folder removed."
           fi
 
-      # 5️⃣ Recreate Android folder with v2 embedding
-      - name: Create Android Folder
+      - name: Create Android Folder (v2 embedding)
         run: |
-          flutter create --androidx --org com.manii.wallpapper --project-name=hd_wallpaper --platforms=android .
-          echo "✅ Android folder (v2 embedding) recreated successfully."
+          flutter create --org com.manii.wallpapper --project-name=hd_wallpaper --platforms=android .
+          echo "Fresh Android folder created with v2 embedding."
 
-      # 6️⃣ Enable INTERNET permission in AndroidManifest.xml
+      - name: Replace Flutter Default Logo
+        run: |
+          for dpi in xxxhdpi xxhdpi xhdpi hdpi mdpi; do
+            mkdir -p android/app/src/main/res/mipmap-$dpi/
+            cp assets/logo.png android/app/src/main/res/mipmap-$dpi/ic_launcher.png
+          done
+          echo "Launcher icon replaced with assets/logo.png"
+
       - name: Enable INTERNET Permission
         run: |
           manifest="android/app/src/main/AndroidManifest.xml"
           if ! grep -q "android.permission.INTERNET" "$manifest"; then
-            sed -i '/<manifest /a\    <uses-permission android:name="android.permission.INTERNET" />' "$manifest"
-            echo "🌐 INTERNET permission added."
+            sed -i '/<manifest /a\    <uses-permission android:name="android.permission.INTERNET" />' $manifest
+            echo "INTERNET permission added."
           else
-            echo "✅ INTERNET permission already exists."
+            echo "INTERNET permission already present."
           fi
 
-      # 7️⃣ Replace Flutter default launcher icon with assets/logo.png
-      - name: Replace Flutter Default Logo
-        run: |
-          if [ -f "assets/logo.png" ]; then
-            for dpi in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
-              mkdir -p android/app/src/main/res/mipmap-$dpi/
-              cp assets/logo.png android/app/src/main/res/mipmap-$dpi/ic_launcher.png
-            done
-            echo "🖼️ App icon replaced successfully."
-          else
-            echo "⚠️ assets/logo.png not found — skipping icon replacement."
-          fi
+      - name: Clean Previous Builds
+        run: flutter clean
 
-      # 8️⃣ Build release APK
       - name: Build APK
         run: flutter build apk --release --no-shrink
 
-      # 9️⃣ Build release AAB
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+
       - name: Build AAB
         run: flutter build appbundle --release --no-shrink
 
-      # 🔟 Upload APK + AAB as build artifacts
-      - name: Upload Build Artifacts
+      - name: Upload AAB Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: hd-wallpaper-builds
-          path: |
-            build/app/outputs/flutter-apk/app-release.apk
-            build/app/outputs/bundle/release/app-release.aab
+          name: app-release-aab
+          path: build/app/outputs/bundle/release/app-release.aab
