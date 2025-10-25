@@ -1,44 +1,46 @@
-name: 4k_hd_wallpaper
-description: A 4K & HD Wallpaper app with Pexels API, Ads, and Hive favorites.
-publish_to: 'none'
+name: hd4k_wallpaper
+description: A 4K & HD Wallpaper app made with Flutter.
+publish_to: "none"
 version: 1.0.0+1
 
 environment:
-  sdk: ">=3.3.0 <4.0.0"
+  sdk: ">=3.4.0 <4.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
 
-  # Networking
+  # UI
+  cupertino_icons: ^1.0.8
+  cached_network_image: ^3.3.1
+
+  # HTTP & Storage
   http: ^1.2.2
-  connectivity_plus: ^6.0.3
-  url_launcher: ^6.3.1
-
-  # UI & Images
-  cached_network_image: ^3.4.1
-  flutter_staggered_grid_view: ^0.7.0
-  gallery_saver: ^2.4.0
-  wallpaper_manager_flutter: ^1.0.3
-  permission_handler: ^11.3.1
-
-  # Local Storage
+  path_provider: ^2.1.4
   shared_preferences: ^2.3.2
-  hive: ^4.0.0
-  hive_flutter: ^2.0.0
 
   # Ads
   google_mobile_ads: ^5.1.0
 
+  # Local database
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+
+  # Connectivity
+  connectivity_plus: ^6.0.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  build_runner: ^2.4.9
-  hive_generator: ^3.0.0
-  flutter_launcher_icons: ^0.14.1
+  flutter_lints: ^4.0.0
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/logo.png"
 
 flutter:
   uses-material-design: true
-
   assets:
-    - assets/logo.png
+    - assets/
