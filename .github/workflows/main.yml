@@ -1,0 +1,119 @@
+name: Flutter Android Build + Release
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build_and_release:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ Checkout Repo
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # 2️⃣ Setup Flutter
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.13.0'
+
+      # 3️⃣ Cache Flutter dependencies
+      - name: Cache Flutter Pub
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.pub-cache
+            .packages
+          key: ${{ runner.os }}-flutter-${{ hashFiles('pubspec.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-flutter-
+
+      # 4️⃣ Get dependencies
+      - name: Flutter pub get
+        run: flutter pub get
+
+      # 5️⃣ Ensure Android v2 embedding
+      - name: Ensure Android v2 embedding
+        run: flutter create . --platforms=android
+
+      # 6️⃣ Add INTERNET permission
+      - name: Add INTERNET permission
+        run: |
+          MANIFEST="android/app/src/main/AndroidManifest.xml"
+          if ! grep -q 'android.permission.INTERNET' "$MANIFEST"; then
+            sed -i '/<manifest /a \ \ <uses-permission android:name="android.permission.INTERNET"\/>' "$MANIFEST"
+            echo "INTERNET permission added."
+          else
+            echo "INTERNET permission already present."
+          fi
+
+      # 7️⃣ Replace App Icon
+      - name: Replace App Icon
+        run: |
+          ICON_DIR="android/app/src/main/res/mipmap-*/ic_launcher.png"
+          if [ -f "assets/logo.png" ]; then
+            for f in $ICON_DIR; do
+              cp assets/logo.png $f
+            done
+            echo "App icon replaced with assets/logo.png"
+          else
+            echo "assets/logo.png not found, skipping icon replacement"
+          fi
+
+      # 8️⃣ Clean build
+      - name: Flutter Clean
+        run: flutter clean
+
+      # 9️⃣ Build APK
+      - name: Build APK
+        run: flutter build apk --release --split-per-abi
+
+      # 🔟 Build AAB
+      - name: Build AAB
+        run: flutter build appbundle --release
+
+      # 1️⃣1️⃣ Upload APK artifact
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-apk
+          path: build/app/outputs/flutter-apk/*.apk
+
+      # 1️⃣2️⃣ Upload AAB artifact
+      - name: Upload AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-aab
+          path: build/app/outputs/bundle/release/*.aab
+
+      # 1️⃣3️⃣ Create GitHub Release
+      - name: Create GitHub Release
+        id: create_release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: "v${{ github.run_number }}"
+          name: "Release ${{ github.run_number }}"
+          body: "Automated build release APK & AAB"
+          draft: false
+          prerelease: false
+
+      # 1️⃣4️⃣ Upload APK to Release
+      - name: Upload APK to Release
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: build/app/outputs/flutter-apk/app-release.apk
+          asset_name: app-release.apk
+          asset_content_type: application/vnd.android.package-archive
+
+      # 1️⃣5️⃣ Upload AAB to Release
+      - name: Upload AAB to Release
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: build/app/outputs/bundle/release/app-release.aab
+          asset_name: app-release.aab
+          asset_content_type: application/vnd.android.package-archive
