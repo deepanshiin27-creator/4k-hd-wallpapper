@@ -1,4 +1,4 @@
-name: Flutter Android Build (Professional)
+name: Flutter Android Release Build (APK + AAB)
 
 on:
   workflow_dispatch:
@@ -8,8 +8,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout Repo
-      - name: Checkout Repository
+      # 1️⃣ Checkout repository
+      - name: Checkout Repo
         uses: actions/checkout@v4
 
       # 2️⃣ Setup Flutter
@@ -18,15 +18,19 @@ jobs:
         with:
           flutter-version: '3.13.0'
 
-      # 3️⃣ Get Dependencies
-      - name: Flutter pub get
+      # 3️⃣ Enable flutter analytics (optional, ignore if not wanted)
+      - name: Disable Analytics (Optional)
+        run: flutter config --no-analytics
+
+      # 4️⃣ Get dependencies
+      - name: Flutter Pub Get
         run: flutter pub get
 
-      # 4️⃣ Ensure Android v2 embedding
+      # 5️⃣ Ensure Android v2 embedding
       - name: Ensure Android v2 embedding
         run: flutter create . --platforms=android
 
-      # 5️⃣ Add INTERNET permission
+      # 6️⃣ Add INTERNET permission if missing
       - name: Add INTERNET permission
         run: |
           MANIFEST="android/app/src/main/AndroidManifest.xml"
@@ -37,7 +41,7 @@ jobs:
             echo "INTERNET permission already present."
           fi
 
-      # 6️⃣ Replace launcher icon with assets/logo.png
+      # 7️⃣ Replace launcher icon
       - name: Replace App Icon
         run: |
           ICON_DIR="android/app/src/main/res/mipmap-*/ic_launcher.png"
@@ -45,31 +49,43 @@ jobs:
             for f in $ICON_DIR; do
               cp assets/logo.png $f
             done
-            echo "App icon replaced."
+            echo "App icon replaced with assets/logo.png"
           else
-            echo "assets/logo.png not found, skipping icon replacement."
+            echo "assets/logo.png not found, skipping icon replacement"
           fi
 
-      # 7️⃣ Flutter Clean
+      # 8️⃣ Flutter clean
       - name: Flutter Clean
         run: flutter clean
 
-      # 8️⃣ Build APK
-      - name: Build APK
-        run: flutter build apk --release
+      # 9️⃣ Flutter pub get (after clean)
+      - name: Flutter Pub Get (post-clean)
+        run: flutter pub get
 
-      # 9️⃣ Build AAB
-      - name: Build AAB
-        run: flutter build appbundle --release
+      # 🔟 Build APK Release
+      - name: Build APK Release
+        run: |
+          set -e
+          echo "Building APK release..."
+          flutter build apk --release --target-platform android-arm,android-arm64,android-x64
+          echo "APK build completed."
 
-      # 🔟 Upload APK artifact
+      # 1️⃣1️⃣ Build AAB Release
+      - name: Build AAB Release
+        run: |
+          set -e
+          echo "Building AAB release..."
+          flutter build appbundle --release
+          echo "AAB build completed."
+
+      # 1️⃣2️⃣ Upload APK artifact
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: app-release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
 
-      # 1️⃣1️⃣ Upload AAB artifact
+      # 1️⃣3️⃣ Upload AAB artifact
       - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
