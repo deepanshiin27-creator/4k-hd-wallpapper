@@ -1,0 +1,51 @@
+name: wallpaper_app
+description: A 4K & HD wallpaper app with favorites, categories, and downloads.
+publish_to: "none"
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # HTTP requests
+  http: ^1.1.0
+
+  # Image caching
+  cached_network_image: ^3.2.3
+
+  # Ads
+  google_mobile_ads: ^3.2.0
+
+  # Local storage
+  shared_preferences: ^2.2.0
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+
+  # File system & directories
+  path_provider: ^2.1.11
+
+  # Connectivity
+  connectivity_plus: ^4.0.3
+
+  # Wallpaper & gallery
+  wallpaper_manager_flutter: ^1.0.3
+  gallery_saver: ^2.3.2
+  permission_handler: ^11.3.1
+
+  # URL launcher
+  url_launcher: ^6.1.10
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/logo.png
