@@ -17,10 +17,13 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.16.2' # Latest stable 2025 with Dart 3.3+
+          flutter-version: '3.13.6'
 
-      - name: Flutter Pub Get
-        run: flutter pub get
+      - name: Upgrade Flutter & Dependencies
+        run: |
+          flutter upgrade --force
+          flutter pub upgrade --major-versions
+          flutter pub get
 
       - name: Remove Old Android Folder (if exists)
         run: |
@@ -40,7 +43,7 @@ jobs:
             mkdir -p android/app/src/main/res/mipmap-$dpi/
             cp assets/logo.png android/app/src/main/res/mipmap-$dpi/ic_launcher.png
           done
-          echo "Launcher icon replaced with logo.png"
+          echo "Launcher icon replaced with assets/logo.png"
 
       - name: Enable INTERNET Permission
         run: |
