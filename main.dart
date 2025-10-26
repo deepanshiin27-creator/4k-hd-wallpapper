@@ -8,7 +8,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:flutter_wallpaper_manager/flutter_wallpaper_manager.dart';
+import 'package:wallpaper_manager_plus/wallpaper_manager_plus.dart';
 import 'package:gallery_saver/gallery_saver.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -514,15 +514,18 @@ class _WallpaperDetailState extends State<WallpaperDetail> {
     try {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text("Setting wallpaper...")));
+
       final response = await http.get(Uri.parse(widget.photo));
       final dir = await getApplicationDocumentsDirectory();
       final file = File("${dir.path}/temp_wallpaper.jpg");
       await file.writeAsBytes(response.bodyBytes);
 
-      await FlutterWallpaperManager.setWallpaperFromFile(
-  file.path,
-  WallpaperManager.BOTH_SCREEN,
-);
+      // Use wallpaper_manager_plus
+      await WallpaperManagerPlus().setWallpaper(
+        file.path,
+        WallpaperManagerPlus.BOTH_SCREENS, // HOME_SCREEN or LOCK_SCREEN also possible
+      );
+
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text("Wallpaper Applied ✅")));
     } catch (e) {
@@ -741,4 +744,4 @@ class SettingsScreen extends StatelessWidget {
       ),
     );
   }
-}
+}:
