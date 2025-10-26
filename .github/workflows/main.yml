@@ -26,13 +26,13 @@ jobs:
         run: |
           if [ -d "android" ]; then
             rm -rf android
-            echo "Old Android folder removed."
+            echo "🗑️ Old Android folder removed."
           fi
 
-      - name: Create Android Folder (v2 embedding)
+      - name: Create Fresh Android Folder (v2 embedding)
         run: |
           flutter create --org com.manii.wallpapper --project-name=hd_wallpaper --platforms=android .
-          echo "Fresh Android folder created with v2 embedding."
+          echo "✅ Fresh Android folder created."
 
       - name: Replace Flutter Default Logo
         run: |
@@ -40,16 +40,33 @@ jobs:
             mkdir -p android/app/src/main/res/mipmap-$dpi/
             cp assets/logo.png android/app/src/main/res/mipmap-$dpi/ic_launcher.png
           done
-          echo "Launcher icon replaced with assets/logo.png"
+          echo "🎨 Launcher icon replaced with assets/logo.png"
 
       - name: Enable INTERNET Permission
         run: |
           manifest="android/app/src/main/AndroidManifest.xml"
           if ! grep -q "android.permission.INTERNET" "$manifest"; then
             sed -i '/<manifest /a\    <uses-permission android:name="android.permission.INTERNET" />' $manifest
-            echo "INTERNET permission added."
+            echo "🌐 INTERNET permission added."
           else
-            echo "INTERNET permission already present."
+            echo "✅ INTERNET permission already present."
+          fi
+
+      # ✅ Patch gallery_saver AFTER android folder creation
+      - name: Fix Gallery Saver Namespace
+        run: |
+          GALLERY_SAVER_PATH=$(find $HOME/.pub-cache/hosted/pub.dev -type d -name "gallery_saver-*" | head -n 1)
+          if [ -n "$GALLERY_SAVER_PATH" ]; then
+            echo "🧩 Patching gallery_saver at: $GALLERY_SAVER_PATH"
+            if ! grep -q "namespace" "$GALLERY_SAVER_PATH/android/build.gradle"; then
+              sed -i '/apply plugin: "com.android.library"/a\
+android {\n    namespace "carnegietechnologies.gallery_saver"\n}' "$GALLERY_SAVER_PATH/android/build.gradle"
+              echo "✅ Namespace added successfully."
+            else
+              echo "✅ Namespace already exists."
+            fi
+          else
+            echo "⚠️ gallery_saver plugin not found."
           fi
 
       - name: Clean Previous Builds
