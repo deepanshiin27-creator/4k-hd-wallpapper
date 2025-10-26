@@ -60,7 +60,7 @@ jobs:
             echo "🧩 Patching gallery_saver at: $GALLERY_SAVER_PATH"
             if ! grep -q "namespace" "$GALLERY_SAVER_PATH/android/build.gradle"; then
               sed -i '/apply plugin: "com.android.library"/a\
-android {\n    namespace "carnegietechnologies.gallery_saver"\n}' "$GALLERY_SAVER_PATH/android/build.gradle"
+              android {\n    namespace "carnegietechnologies.gallery_saver"\n}' "$GALLERY_SAVER_PATH/android/build.gradle"
               echo "✅ Namespace added successfully."
             else
               echo "✅ Namespace already exists."
