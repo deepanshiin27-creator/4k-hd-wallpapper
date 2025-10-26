@@ -34,53 +34,50 @@ jobs:
           flutter create --org com.manii.wallpapper --project-name=hd_wallpaper --platforms=android .
           echo "✅ Fresh Android folder created."
 
-      - name: Replace Flutter Default Logo
+      - name: Replace Launcher Icons
         run: |
-          echo "🎨 Replacing launcher icons with assets/logo.png"
-          # Replace all standard DPI icons
           for dpi in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
             DEST="android/app/src/main/res/mipmap-$dpi/ic_launcher.png"
             mkdir -p $(dirname $DEST)
             cp assets/logo.png $DEST
-            echo "✅ Replaced $DEST"
           done
-          # Replace adaptive icons (foreground/background)
           for icon_type in foreground background; do
             DEST_ADAPTIVE="android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_$icon_type.png"
             mkdir -p $(dirname $DEST_ADAPTIVE)
             cp assets/logo.png $DEST_ADAPTIVE
-            echo "✅ Replaced $DEST_ADAPTIVE"
           done
+          echo "🎨 Launcher icons replaced."
 
-      - name: Enable INTERNET Permission
+      - name: Add Required Permissions
         run: |
           manifest="android/app/src/main/AndroidManifest.xml"
-          if ! grep -q "android.permission.INTERNET" "$manifest"; then
-            sed -i '/<manifest /a\    <uses-permission android:name="android.permission.INTERNET" />' $manifest
-            echo "🌐 INTERNET permission added."
-          else
-            echo "✅ INTERNET permission already present."
-          fi
+          declare -a perms=("INTERNET" "WRITE_EXTERNAL_STORAGE" "READ_EXTERNAL_STORAGE" "ACCESS_NETWORK_STATE" "FOREGROUND_SERVICE")
+          for p in "${perms[@]}"; do
+            if ! grep -q "android.permission.$p" "$manifest"; then
+              sed -i "/<manifest /a\    <uses-permission android:name=\"android.permission.$p\" />" $manifest
+              echo "✅ Permission $p added."
+            else
+              echo "✅ Permission $p already present."
+            fi
+          done
 
       - name: Fix Gallery Saver Namespace (AGP 8+)
         run: |
           GALLERY_SAVER_PATH=$(find $HOME/.pub-cache/hosted/pub.dev -type d -name "gallery_saver-*" | head -n 1)
-          echo "🔍 Checking for gallery_saver plugin path..."
           if [ -d "$GALLERY_SAVER_PATH/android" ]; then
-            echo "🧩 Found gallery_saver at $GALLERY_SAVER_PATH"
             GRADLE_FILE="$GALLERY_SAVER_PATH/android/build.gradle"
             if ! grep -q "namespace" "$GRADLE_FILE"; then
-              echo "📦 Adding namespace to gallery_saver..."
               echo '
               android {
-              namespace "carnegietechnologies.gallery_saver"}
+                namespace "carnegietechnologies.gallery_saver"
+              }
               ' >> "$GRADLE_FILE"
-              echo "✅ Namespace successfully added."
+              echo "✅ Namespace added to gallery_saver"
             else
-              echo "✅ Namespace already present."
+              echo "✅ Namespace already present in gallery_saver"
             fi
           else
-            echo "⚠️ gallery_saver plugin not found."
+            echo "⚠️ gallery_saver plugin not found"
           fi
 
       - name: Clean Previous Builds
