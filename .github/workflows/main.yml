@@ -36,11 +36,21 @@ jobs:
 
       - name: Replace Flutter Default Logo
         run: |
-          for dpi in xxxhdpi xxhdpi xhdpi hdpi mdpi; do
-            mkdir -p android/app/src/main/res/mipmap-$dpi/
-            cp assets/logo.png android/app/src/main/res/mipmap-$dpi/ic_launcher.png
+          echo "🎨 Replacing launcher icons with assets/logo.png"
+          # Replace all standard DPI icons
+          for dpi in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+            DEST="android/app/src/main/res/mipmap-$dpi/ic_launcher.png"
+            mkdir -p $(dirname $DEST)
+            cp assets/logo.png $DEST
+            echo "✅ Replaced $DEST"
           done
-          echo "🎨 Launcher icon replaced with assets/logo.png"
+          # Replace adaptive icons (foreground/background)
+          for icon_type in foreground background; do
+            DEST_ADAPTIVE="android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_$icon_type.png"
+            mkdir -p $(dirname $DEST_ADAPTIVE)
+            cp assets/logo.png $DEST_ADAPTIVE
+            echo "✅ Replaced $DEST_ADAPTIVE"
+          done
 
       - name: Enable INTERNET Permission
         run: |
@@ -52,18 +62,22 @@ jobs:
             echo "✅ INTERNET permission already present."
           fi
 
-      # ✅ Patch gallery_saver AFTER android folder creation
-      - name: Fix Gallery Saver Namespace
+      - name: Fix Gallery Saver Namespace (AGP 8+)
         run: |
           GALLERY_SAVER_PATH=$(find $HOME/.pub-cache/hosted/pub.dev -type d -name "gallery_saver-*" | head -n 1)
-          if [ -n "$GALLERY_SAVER_PATH" ]; then
-            echo "🧩 Patching gallery_saver at: $GALLERY_SAVER_PATH"
-            if ! grep -q "namespace" "$GALLERY_SAVER_PATH/android/build.gradle"; then
-              sed -i '/apply plugin: "com.android.library"/a\
-              android {\n    namespace "carnegietechnologies.gallery_saver"\n}' "$GALLERY_SAVER_PATH/android/build.gradle"
-              echo "✅ Namespace added successfully."
+          echo "🔍 Checking for gallery_saver plugin path..."
+          if [ -d "$GALLERY_SAVER_PATH/android" ]; then
+            echo "🧩 Found gallery_saver at $GALLERY_SAVER_PATH"
+            GRADLE_FILE="$GALLERY_SAVER_PATH/android/build.gradle"
+            if ! grep -q "namespace" "$GRADLE_FILE"; then
+              echo "📦 Adding namespace to gallery_saver..."
+              echo '
+              android {
+              namespace "carnegietechnologies.gallery_saver"}
+              ' >> "$GRADLE_FILE"
+              echo "✅ Namespace successfully added."
             else
-              echo "✅ Namespace already exists."
+              echo "✅ Namespace already present."
             fi
           else
             echo "⚠️ gallery_saver plugin not found."
